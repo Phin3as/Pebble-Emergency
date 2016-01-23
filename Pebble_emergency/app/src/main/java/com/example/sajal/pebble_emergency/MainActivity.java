@@ -1,27 +1,18 @@
 package com.example.sajal.pebble_emergency;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.telephony.SmsManager;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import com.twilio.client.Connection;
-import com.twilio.client.Device;
-import com.twilio.client.Twilio;
-
-public class MainActivity extends AppCompatActivity implements Twilio.InitListener{
+public class MainActivity extends AppCompatActivity{
 
     Button b1;
     Button b2;
@@ -40,39 +31,32 @@ public class MainActivity extends AppCompatActivity implements Twilio.InitListen
         layout = (LinearLayout) findViewById(R.id.sajal);
 
 
-        b1.setOnClickListener(new View.OnClickListener(){
+        b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage("2676326112", null, "YOU SUCK!", null, null);
                     layout.setBackgroundColor(Color.GREEN);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     layout.setBackgroundColor(Color.RED);
                 }
 
             }
         });
 
-        b2.setOnClickListener(new View.OnClickListener(){
+        b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    callTwilio();
-                    Intent in = new Intent(Intent.ACTION_CALL);
+                    Intent in = new Intent(Intent.ACTION_DIAL);
                     in.setData(Uri.parse("tel:2676326112"));
                     startActivity(in);
 
-//                    layout.setBackgroundColor(Color.GREEN);
-                }
-                catch (SecurityException e) {
+                    layout.setBackgroundColor(Color.GREEN);
+                } catch (Exception e) {
                     e.printStackTrace();
                     layout.setBackgroundColor(Color.RED);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                    layout.setBackgroundColor(Color.BLUE);
                 }
             }
         });
@@ -83,15 +67,6 @@ public class MainActivity extends AppCompatActivity implements Twilio.InitListen
                 layout.setBackgroundColor(Color.BLACK);
             }
         });
-    }
-
-    public void callTwilio() {
-        Device device;
-        Connection connection;
-
-        Context context = getApplicationContext();
-
-        Twilio.initialize(context,this);
     }
 
     @Override
@@ -116,12 +91,5 @@ public class MainActivity extends AppCompatActivity implements Twilio.InitListen
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onError(Exception e) {
 
-    }
-
-    @Override
-    public void onInitialized() {
-    }
 }
