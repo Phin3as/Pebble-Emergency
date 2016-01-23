@@ -10,22 +10,31 @@
 
 static Window *s_main_window;
 static TextLayer *s_output_layer;
-////////////////////////////////////////////
-static bool isButtonPress = false;
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-    text_layer_set_text(s_output_layer, "Select pressed!");
-    isButtonPress= true;
+
+static int s_uptime = 0;
+
+// for status monitoring
+
+static void outbox_sent_handler(DictionaryIterator *iter, void *context) {
+  // Ready for next command
+  text_layer_set_text(s_output_layer, "Press up or down.");
 }
+
+static void outbox_failed_handler(DictionaryIterator *iter, AppMessageResult reason, void *context) {
+  text_layer_set_text(s_output_layer, "Send failed!");
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Fail reason: %d", (int)reason);
+}
+
+
+
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Select pressed!");
+}
+
 static void click_config_provider(void *context) {
     // Register the ClickHandlers
-    //window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
-    //window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
-    //window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+    window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 }
-
-
-////////////////////////////////////////////
-static int s_uptime = 0;
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // Use a long-lived buffer
@@ -49,44 +58,56 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
     static int delX=0, delY=0, delZ=0;
     static int prevY=INT_MAX, prevZ=INT_MIN;
     static int tempY = 0,tempZ=0;
+    static bool start = false;
     // Compose string of all data
     if(ctr%1 == 0){
         //if(isButtonPress)
         //{
-           
-            snprintf(s_buffer, sizeof(s_buffer),
-            " %d,%d,%d",
-            data[0].x, data[0].y, data[0].z
-            
-            );
-            
-            APP_LOG(APP_LOG_LEVEL_DEBUG,s_buffer, sizeof(s_buffer),
-            "N X,Y,Z\n0, %d,%d,%d",
-            data[0].x, data[0].y, data[0].z);
-            if ((counter == 0  && (prevY*data[0].y<0 && prevZ*data[0].z<0)) || ( counter > 0 && counter<15 ) ){
-              //|| (prevY>data[0].y && prevZ<data[0].z)
-              counter++;
-              APP_LOG(APP_LOG_LEVEL_DEBUG,"%d",counter);
-            }
-            else if(counter == 5 && data[0].y<0){
-                tempY = data[0].y;
-              tempZ=data[0].z;
-                counter++;
-            }
-            if( counter == 15 && data[0].y>=tempY && data[0].z<=tempZ){
-                APP_LOG(APP_LOG_LEVEL_DEBUG,"Flick detected");
-              APP_LOG(APP_LOG_LEVEL_DEBUG,"%d",counter);
-                counter = 0;
-                tempY = 0;
-              tempZ=0;
-            }
-            //          prevX=data[0].x;
-            prevY=data[0].y;
+        
+        snprintf(s_buffer, sizeof(s_buffer),
+        " %d,%d,%d",
+        data[0].x, data[0].y, data[0].z
+        
+        );
+        
+     /*   APP_LOG(APP_LOG_LEVEL_DEBUG,s_buffer, sizeof(s_buffer),
+        "N X,Y,Z\n0, %d,%d,%d",
+        data[0].x, data[0].y, data[0].z);*/
+        if(counter==0&& start == false)
+        {
+            prevY= data[0].y ;
             prevZ=data[0].z;
-            
-            APP_LOG(APP_LOG_LEVEL_DEBUG,s_buffer, sizeof(s_buffer),
-            "N X,Y,Z\n0, %d,%d,%d",
-            data[0].x, data[0].y, data[0].z);
+            start=true;
+        }
+        if((counter == 0  && (data[0].y<prevY && data[0].z<prevZ)) || ( counter > 0 && counter<15 ) ){
+            //|| (prevY>data[0].y && prevZ<data[0].z)
+            APP_LOG(APP_LOG_LEVEL_DEBUG,"%d",counter);
+            counter++;
+        }
+        else if(counter == 5 && data[0].y<0 && data[0].z>0){
+            tempY = data[0].y;
+            tempZ = data[0].z;
+            counter++;
+        }
+        /* else if (counter > 5 && (data[0].y>0 || data[0].z < 0)){
+        tempY = 0;
+        tempZ = 0;
+        counter = 0;
+        }*/
+        if( counter == 15 && data[0].y>=tempY && data[0].z<=tempZ){
+            APP_LOG(APP_LOG_LEVEL_DEBUG,"Flick detected");
+            APP_LOG(APP_LOG_LEVEL_DEBUG,"%d",counter);
+            counter = 0;
+            tempY = 0;
+            tempZ=0;
+            start = false;
+        }
+        
+        //          prevX=data[0].x;
+        prevY=data[0].y;
+        prevZ=data[0].z;
+        
+       
         //}
         
         //\n1 %d,%d,%d\n2 %d,%d,%d
@@ -132,19 +153,23 @@ static void init() {
     ////////////////////////////
     window_stack_push(s_main_window, true);
     
-        // Subscribe to the accelerometer data service
-        int num_samples = 1;
-        accel_data_service_subscribe(num_samples, data_handler);
-        
-        // Choose update rate
-        accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
-        tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+    // Subscribe to the accelerometer data service
+    int num_samples = 1;
+    accel_data_service_subscribe(num_samples, data_handler);
+    
+    // Choose update rate
+    accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
+    tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+    
+    window_set_click_config_provider(s_main_window, click_config_provider);
+  // Open AppMessage
+app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+
     
 }
 
 static void deinit() {
-    // Destroy main Window
-    window_destroy(s_main_window);
+   
     
     if (TAP_NOT_DATA) {
         accel_tap_service_unsubscribe();
@@ -152,8 +177,10 @@ static void deinit() {
         accel_data_service_unsubscribe();
         tick_timer_service_unsubscribe();
         
-
+        
     }
+   //Destroy main Window
+    window_destroy(s_main_window);
 }
 
 int main(void) {
