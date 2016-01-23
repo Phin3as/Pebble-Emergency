@@ -1,0 +1,23 @@
+{
+    "appKeys": {
+        "message": 1,
+        "status": 0
+    },
+    "capabilities": [
+        ""
+    ],
+    "companyName": "karthik.natraj@gmail.com",
+    "longName": "Hack",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "2",
+    "shortName": "Hack",
+    "uuid": "77c142b8-f857-410a-8601-07068f8dedbe",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
