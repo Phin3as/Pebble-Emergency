@@ -8,6 +8,9 @@
 #include <limits.h>
 #define TAP_NOT_DATA false
 
+#define KEY_BUTTON_UP   0
+#define KEY_BUTTON_DOWN 1
+
 static Window *s_main_window;
 static TextLayer *s_output_layer;
 
@@ -25,15 +28,34 @@ static void outbox_failed_handler(DictionaryIterator *iter, AppMessageResult rea
   APP_LOG(APP_LOG_LEVEL_ERROR, "Fail reason: %d", (int)reason);
 }
 
+// for input data monitoring
+/*
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
+}
 
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+/////////////////////////
+*/
+static void send(int key, int value) {
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Select pressed!");
+  dict_write_int(iter, key, &value, sizeof(int), true);
+
+  app_message_outbox_send();
+}
+
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Up pressed!");
+  send(KEY_BUTTON_UP, 0);
 }
 
 static void click_config_provider(void *context) {
     // Register the ClickHandlers
-    window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+    window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -124,6 +146,7 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
 
 
 
+
 static void main_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect window_bounds = layer_get_bounds(window_layer);
@@ -162,6 +185,15 @@ static void init() {
     tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
     
     window_set_click_config_provider(s_main_window, click_config_provider);
+  
+  
+app_message_register_outbox_sent(outbox_sent_handler);
+app_message_register_outbox_failed(outbox_failed_handler);
+  
+  
+  
+//app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+
   // Open AppMessage
 app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
