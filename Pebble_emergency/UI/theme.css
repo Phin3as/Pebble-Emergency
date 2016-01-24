@@ -1,0 +1,10 @@
+body {
+	background-color: blue;
+}
+
+#googleMap {
+	background-color: yellow;
+	height: 70%;
+	width: 70%;
+	border: 10px;
+}

@@ -16,6 +16,11 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,8 +53,6 @@ public class MainActivity extends AppCompatActivity{
                     msg = "YOU SUCK!";
                 }
 
-//                System.out.println(msg);
-
                 try {
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage("2676326112", null, msg, null, null);
@@ -57,6 +60,38 @@ public class MainActivity extends AppCompatActivity{
                 } catch (Exception e) {
                     layout.setBackgroundColor(Color.RED);
                 }
+
+//                LocationManager lm;
+//                List<String> providers;
+//                Location l;
+//                while(true) {
+//                    lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//                    providers = lm.getProviders(true);
+//                    l = null;
+//
+//                    Double latitude=0.0,longitude=0.0;
+//
+//                    for (int i = 0; i < providers.size(); i++) {
+//                        l = lm.getLastKnownLocation(providers.get(i));
+//                        if (l != null) {
+//                            latitude = l.getLatitude();
+//                            longitude = l.getLongitude();
+//                            break;
+//                        }
+//                    }
+//
+//                    try {
+//                        List<Double> list = new ArrayList<Double>();
+//                        list.add(latitude);
+//                        list.add(longitude);
+//                        new AsyncTaskClass().execute(list);
+//                        Thread.sleep(5*1000);
+//                    }
+//                    catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                    break;
+//                }
 
             }
         });
@@ -70,7 +105,6 @@ public class MainActivity extends AppCompatActivity{
                     msg = "YOU SUCK!";
                 }
 
-//                System.out.println(msg);
                 try {
                     Intent in = new Intent(Intent.ACTION_DIAL);
                     in.setData(Uri.parse("tel:2676326112"));
@@ -113,7 +147,7 @@ public class MainActivity extends AppCompatActivity{
             }
         }
         if (strAdd.length()!=0) {
-            msg = "Latitude:"+latitude+"\nLongitude:"+longitude+"\nAddress:"+strAdd;
+            msg = "Latitude:"+latitude+"\nLongitude:"+longitude+"\nAddress:"+strAdd+"\nhttps://www.google.com/maps/@"+latitude+","+longitude+",15z";
         }
         return msg;
     }
@@ -165,6 +199,5 @@ public class MainActivity extends AppCompatActivity{
         }
         return strAdd;
     }
-
 
 }
